@@ -62,6 +62,7 @@ function Dashboard() {
   const { theme, setTheme } = useThemeStore();
   const { unreadCount, notificationsEnabled, toggleNotifications } = useNotificationStore();
   const { projects, loading, addProject, toggleFavorite, deleteProject, toggleVisibility, loadProjects } = useProjectStore();
+  console.log('Loaded projects:', projects);
   const [currentView, setCurrentView] = useState<ProjectVisibility>('all');
   const [projectView, setProjectView] = useState<ProjectView>('all');
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
