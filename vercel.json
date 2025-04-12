@@ -6,11 +6,9 @@
     }
   },
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1.mjs" }
-  ],
-  "env": {
-    "NODE_ENV": "production",
-    "MONGODB_URI": "mongodb+srv://nokillerspy:xZGuX6LrmCakFRtT@launchmate.vznibue.mongodb.net/?retryWrites=true&w=majority&appName=LaunchMate",
-    "GEMINI_API_KEY": "AIzaSyBEyUmPyw1bHxniq92mLZdC0an-kw2370I"
-  }
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1.mjs"
+    }
+  ]
 }
