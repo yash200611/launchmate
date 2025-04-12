@@ -1,5 +1,5 @@
 import clientPromise from './connect.mjs';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 export default async function handler(req, res) {
   try {
