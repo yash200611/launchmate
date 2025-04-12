@@ -35,8 +35,15 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
     try {
       const res = await fetch(`/api/projects?ownerEmail=${user.email}`);
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Failed to load projects:", text);
+        return;
+      }
       const data = await res.json();
       set({ projects: data });
+
     } catch (error) {
       console.error('Error loading projects:', error);
     }
