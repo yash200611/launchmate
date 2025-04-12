@@ -3,8 +3,6 @@ import { X, Globe, Lock } from 'lucide-react';
 import { useThemeStore, getThemeClasses } from '../store/themeStore';
 import { useAuthStore } from '../store/authStore';
 
-const { user } = useAuthStore();
-
 interface NewProjectModalProps {
   onClose: () => void;
   onSubmit: (projectData: {
@@ -19,10 +17,11 @@ interface NewProjectModalProps {
   }) => void;
 }
 
-
 export default function NewProjectModal({ onClose, onSubmit }: NewProjectModalProps) {
   const { theme } = useThemeStore();
+  const { user } = useAuthStore(); // ✅ MOVED HERE
   const themeClasses = getThemeClasses(theme);
+
   
   const [formData, setFormData] = useState({
     title: '',
