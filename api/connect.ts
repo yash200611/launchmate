@@ -1,7 +1,14 @@
 import { MongoClient } from 'mongodb';
 
 const uri = process.env.MONGODB_URI!;
-const options = {};
+const options = {
+  maxPoolSize: 10,
+  minPoolSize: 5,
+  retryWrites: true,
+  ssl: true,
+  connectTimeoutMS: 5000,
+  serverSelectionTimeoutMS: 5000,
+};
 
 let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
@@ -25,10 +32,17 @@ if (process.env.NODE_ENV === 'development') {
   clientPromise = client.connect();
 }
 
+// Add error handling for the connection
 clientPromise.then(client => {
   console.log('Successfully connected to MongoDB');
 }).catch(err => {
   console.error('MongoDB connection error:', err);
+  // Attempt to reconnect
+  setTimeout(() => {
+    console.log('Attempting to reconnect to MongoDB...');
+    client = new MongoClient(uri, options);
+    clientPromise = client.connect();
+  }, 5000);
 });
 
 export default clientPromise;

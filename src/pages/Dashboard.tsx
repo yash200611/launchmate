@@ -656,7 +656,7 @@ function Dashboard() {
       )}
 
       {/* AI Chatbot */}
-      {/*<AIChatbot />*/}
+      <AIChatbot />
     </div>
   );
 }
