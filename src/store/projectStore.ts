@@ -46,12 +46,10 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       }
       const data = await res.json();
 
-      // ✅ map _id → id for all projects
-      const mapped = data.map((project: any) => ({
-        ...project,
-        id: project._id, // important
+      const mapped = data.map(p => ({
+        ...p,
+        id: p._id, // this is key
       }));
-
       set({ projects: mapped });
     } catch (error) {
       console.error('Error loading projects:', error);

@@ -58,8 +58,9 @@ export default function NewProjectModal({ onClose, onSubmit }: NewProjectModalPr
     });
     
     const data = await res.json();
-    
-    if (res.ok && data.id) {
+    const newProjectId = data.id || data.insertedId || data._id;
+
+    if (res.ok && newProjectId) {
       await loadProjects();
       onClose();
     } else {
