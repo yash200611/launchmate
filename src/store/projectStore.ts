@@ -33,10 +33,16 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   loadProjects: async () => {
     const { user } = useAuthStore.getState();
-    if (!user?.email) return;
-
+  
+    console.log('Loading projects for user:', user); // ✅ log inside the store
+  
+    if (!user?.email || typeof user.email !== 'string') {
+      console.warn('Missing or invalid user email in loadProjects');
+      return;
+    }
+  
     set({ loading: true });
-
+  
     try {
       const res = await fetch(`/api/projects?ownerEmail=${user.email}`);
       if (!res.ok) {
@@ -44,12 +50,9 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         console.error("Failed to load projects:", text);
         return;
       }
+  
       const data = await res.json();
-
-      const mapped = data.map(p => ({
-        ...p,
-        id: p._id, // this is key
-      }));
+      const mapped = data.map((p: any) => ({ ...p, id: p._id }));
       set({ projects: mapped });
     } catch (error) {
       console.error('Error loading projects:', error);

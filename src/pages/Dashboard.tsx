@@ -94,9 +94,14 @@ function Dashboard() {
     document.documentElement.className = `${themeColors[theme].bg} ${themeColors[theme].text}`;
   }, [theme]);
 
+  const { user } = useAuthStore();
+  const fetchProjects = useProjectStore(state => state.loadProjects);
+
   useEffect(() => {
-    loadProjects();
-  }, []);
+    if (user?.email) {
+      fetchProjects();
+    }
+  }, [user?.email]);
 
   const getThemeClasses = () => {
     switch (theme) {
