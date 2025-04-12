@@ -43,20 +43,28 @@ export default function NewProjectModal({ onClose, onSubmit }: NewProjectModalPr
     e.preventDefault();
     const { newTag, ...projectData } = formData;
   
-    const newProject = await addProject({
-      ...projectData,
-      ownerEmail: user.email,
-      lastEdited: new Date().toISOString(),
-      dateCreated: new Date().toISOString(),
-      collaborators: [],
-      favorite: false,
+    if (!user?.email) {
+      alert('User not found. Please log in again.');
+      return;
+    }
+    
+    const res = await fetch('/api/projects.mjs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...projectData,
+        ownerEmail: user.email
+      })
     });
-  
-    if (newProject?.id) {
+    
+    const data = await res.json();
+    
+    if (res.ok && data.id) {
+      loadProjects();
       onClose();
-      navigate(`/project/${newProject.id}`);
+      navigate(`/project/${data.id}`);
     } else {
-      alert('Failed to create project!');
+      alert(data.error || 'Failed to create project!');
     }
   };
   
