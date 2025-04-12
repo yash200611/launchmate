@@ -4,15 +4,7 @@ import { useProjectStore } from '../store/projectStore';
 import { useThemeStore, getThemeClasses } from '../store/themeStore';
 import pptxgen from 'pptxgenjs';
 import {
-  ArrowLeft,
-  Users,
-  Milestone,
-  Bell,
-  MessageSquare,
-  Link,
-  Calendar,
-  Target,
-  ChevronRight,
+  ArrowLeft, Users, Milestone, Bell, MessageSquare, Link, Calendar, Target, ChevronRight,
   Star,
   UserPlus,
   Share2,
@@ -363,7 +355,7 @@ export default function ProjectDetails() {
   const themeClasses = getThemeClasses(theme);
   const { projects } = useProjectStore();
   const [activeTab, setActiveTab] = useState('milestones');
-  const [expandedMilestone, setExpandedMilestone] = useState<string | null>(null);
+  const [expandedMilestones, setExpandedMilestones] = useState<{ [projectId: string]: string | null }>({});
   const [showMilestoneSummary, setShowMilestoneSummary] = useState(false);
 
   const project = projects.find(p => p.id === id);
@@ -383,6 +375,18 @@ export default function ProjectDetails() {
       </div>
     );
   }
+
+  // 👇 Milestone expansion toggle per-project
+  const toggleMilestone = (projectId: string, milestoneTitle: string) => {
+    setExpandedMilestones(prev => ({
+      ...prev,
+      [projectId]: prev[projectId] === milestoneTitle ? null : milestoneTitle
+    }));
+  };
+
+  // 👇 Helper to check if current milestone is expanded
+  const isMilestoneExpanded = (milestoneTitle: string) =>
+    expandedMilestones[project.id] === milestoneTitle;
 
   const currentPhase = project.stage || 'idea';
   const currentPhaseIndex = phases.findIndex(phase => phase.id === currentPhase);
@@ -465,7 +469,7 @@ export default function ProjectDetails() {
                   className={`${themeClasses.card} border ${themeClasses.border} rounded-lg overflow-hidden`}
                 >
                   <button
-                    onClick={() => setExpandedMilestone(expandedMilestone === milestone.title ? null : milestone.title)}
+                    onClick={() => toggleMilestone(project.id, milestone.title)}
                     className="w-full p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
                     <div className="flex items-center gap-4">
@@ -486,7 +490,7 @@ export default function ProjectDetails() {
                     )}
                   </button>
 
-                  {expandedMilestone === milestone.title && (
+                  {isMilestoneExpanded(milestone.title) && (
                     <div className="p-4 border-t border-gray-200 dark:border-gray-700">
                       <div className="space-y-4">
                         <div className="flex items-center gap-2 text-sm text-gray-500">
