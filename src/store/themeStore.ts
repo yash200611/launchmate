@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { createStore } from 'zustand/vanilla';
+
 
 type Theme = 'light' | 'dark' | 'contrast';
 
@@ -8,7 +10,7 @@ interface ThemeState {
   setTheme: (theme: Theme) => void;
 }
 
-export const useThemeStore = create<ThemeState>()(
+export const themeStore = createStore<ThemeState>()(
   persist(
     (set) => ({
       theme: 'light',
@@ -19,6 +21,9 @@ export const useThemeStore = create<ThemeState>()(
     }
   )
 );
+
+export const useThemeStore = create(themeStore);
+
 
 export const getThemeClasses = (theme: Theme) => {
   switch (theme) {
