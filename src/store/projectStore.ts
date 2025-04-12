@@ -44,7 +44,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     set({ loading: true });
   
     try {
-      const res = await fetch(`/api/projects?ownerEmail=${user.email}`);
+      const res = await fetch(`/api/projects?email=${user.email}`);
       if (!res.ok) {
         const text = await res.text();
         console.error("Failed to load projects:", text);
