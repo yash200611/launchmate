@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import clientPromise from './connect';
+import clientPromise from './connect.ts';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const client = await clientPromise;
