@@ -1,53 +1,44 @@
-// FILE: api/projects.js
+// FILE: api/projects.mjs
 import clientPromise from './connect.mjs';
 
 export default async function handler(req, res) {
   const client = await clientPromise;
   const db = client.db('launchmate');
-  const collection = db.collection('projects');
+  const projects = db.collection('projects');
 
-  if (req.method === 'GET') {
-    const { ownerEmail } = req.query;
-    if (!ownerEmail) return res.status(400).json({ error: 'Missing ownerEmail in query' });
+  try {
+    if (req.method === 'GET') {
+      const email = req.query.email;
+      if (!email) return res.status(400).json({ error: 'Missing email' });
 
-    const projects = await collection.find({ ownerEmail }).toArray();
-    return res.status(200).json(projects);
-  }
-
-  if (req.method === 'POST') {
-    const {
-      title,
-      description,
-      visibility,
-      problem,
-      targetAudience,
-      stage,
-      tags,
-      ownerEmail
-    } = req.body;
-
-    if (!title || !description || !ownerEmail) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      const result = await projects.find({ ownerEmail: email }).toArray();
+      return res.status(200).json(result);
     }
 
-    const newProject = {
-      title,
-      description,
-      visibility,
-      problem,
-      targetAudience,
-      stage,
-      tags,
-      ownerEmail,
-      lastEdited: new Date().toISOString(),
-      dateCreated: new Date().toISOString(),
-      collaborators: [],
-      favorite: false,
-    };
+    if (req.method === 'POST') {
+      const { title, description, problem, targetAudience, tags, ownerEmail } = req.body;
+      if (!title || !ownerEmail || !description) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
 
-    const result = await collection.insertOne(newProject);
-    return res.status(201).json({ insertedId: result.insertedId, ...newProject });
+      const newProject = {
+        title,
+        description: description || '',
+        problem: problem || '',
+        targetAudience: targetAudience || '',
+        tags: tags || [],
+        ownerEmail,
+        stage: 'idea',
+        lastEdited: new Date().toISOString()
+      };
+
+      const result = await projects.insertOne(newProject);
+      return res.status(201).json({ ...newProject, id: result.insertedId });
+    }
+
+    return res.status(405).json({ error: 'Method not allowed' });
+  } catch (err) {
+    console.error('PROJECT API ERROR:', err);
+    return res.status(500).json({ error: 'Server error' });
   }
-
-  return res.status(405).json({ error: 'Method not allowed' });
 }
