@@ -5,6 +5,14 @@ export default defineConfig({
   plugins: [react()],
   base: './', // ✔️ allows relative loading of bundle assets
   build: {
-    outDir: 'dist'
+    outDir: 'dist',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    }
+  },
+  server: {
+    host: true
   }
 });
