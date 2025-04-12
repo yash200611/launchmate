@@ -34,28 +34,25 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   loadProjects: async () => {
     const { user } = useAuthStore.getState();
     if (!user?.email) return;
-
-    set({ loading: true });
+  
+    set({ loading: true }); // ✅ Start loading
+  
     try {
       const res = await fetch(`/api/projects?ownerEmail=${user.email}`);
-
       if (!res.ok) {
         const text = await res.text();
         console.error("Failed to load projects:", text);
         return;
       }
       const data = await res.json();
-      if (Array.isArray(data)) {
-        set({ projects: data, loading: false });
-      } else {
-        console.error("Unexpected response format:", data);
-        set({ loading: false });
-      }
+      set({ projects: data });
     } catch (error) {
       console.error('Error loading projects:', error);
-      set({ loading: false });
+    } finally {
+      set({ loading: false }); // ✅ End loading
     }
   },
+  
 
   addProject: (project: Project) => {
     set((state) => ({

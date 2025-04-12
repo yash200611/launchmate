@@ -34,6 +34,7 @@ export const getThemeClasses = (theme: Theme) => {
         button: 'bg-gray-700 hover:bg-gray-600',
         accent: 'text-indigo-400',
         dropdown: 'bg-gray-800 border-gray-700',
+        tag: 'bg-gray-700 text-white' // ✅ Add this
       };
     case 'contrast':
       return {
@@ -47,6 +48,7 @@ export const getThemeClasses = (theme: Theme) => {
         button: 'bg-gray-800 hover:bg-gray-700',
         accent: 'text-indigo-300',
         dropdown: 'bg-gray-900 border-gray-800',
+        tag: 'bg-white text-black' // ✅ Add this
       };
     default:
       return {
@@ -57,9 +59,10 @@ export const getThemeClasses = (theme: Theme) => {
         card: 'bg-white',
         border: 'border-gray-200',
         hover: 'hover:bg-gray-50',
-        button: 'bg-gray-100 hover:bg-gray-200',
+        button: 'bg-gray-50 hover:bg-gray-100',
         accent: 'text-indigo-600',
         dropdown: 'bg-white border-gray-200',
+        tag: 'bg-gray-200 text-black' // ✅ Add this
       };
   }
 };
