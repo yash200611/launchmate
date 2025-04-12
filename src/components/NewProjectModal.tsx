@@ -60,17 +60,13 @@ export default function NewProjectModal({ onClose, onSubmit }: NewProjectModalPr
     const data = await res.json();
     
     if (res.ok && data.id) {
-      loadProjects();
+      await loadProjects();
       onClose();
-      navigate(`/project/${data.id}`);
     } else {
       alert(data.error || 'Failed to create project!');
     }
   };
   
-  
-  
-
   const addTag = () => {
     if (formData.newTag.trim() && !formData.tags.includes(formData.newTag.trim())) {
       setFormData({
