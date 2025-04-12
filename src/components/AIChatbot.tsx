@@ -115,7 +115,7 @@ export default function AIChatbot() {
             >
               <p className="text-sm">{message.text}</p>
               <span className="text-xs opacity-70 mt-1 block">
-                {message.timestamp.toLocaleTimeString()}
+              {new Date(message.timestamp).toLocaleTimeString()}
               </span>
             </div>
           </div>
