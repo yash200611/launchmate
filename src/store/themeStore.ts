@@ -1,7 +1,5 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { createStore } from 'zustand/vanilla';
-
 
 type Theme = 'light' | 'dark' | 'contrast';
 
@@ -10,7 +8,7 @@ interface ThemeState {
   setTheme: (theme: Theme) => void;
 }
 
-export const themeStore = createStore<ThemeState>()(
+export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
       theme: 'light',
@@ -21,9 +19,6 @@ export const themeStore = createStore<ThemeState>()(
     }
   )
 );
-
-export const useThemeStore = create(themeStore);
-
 
 export const getThemeClasses = (theme: Theme) => {
   switch (theme) {
@@ -53,7 +48,7 @@ export const getThemeClasses = (theme: Theme) => {
         accent: 'text-indigo-300',
         dropdown: 'bg-gray-900 border-gray-800',
       };
-    default: // light theme
+    default:
       return {
         background: 'bg-gray-50',
         sidebar: 'bg-white',
@@ -62,7 +57,7 @@ export const getThemeClasses = (theme: Theme) => {
         card: 'bg-white',
         border: 'border-gray-200',
         hover: 'hover:bg-gray-50',
-        button: 'bg-gray-50 hover:bg-gray-100',
+        button: 'bg-gray-100 hover:bg-gray-200',
         accent: 'text-indigo-600',
         dropdown: 'bg-white border-gray-200',
       };
