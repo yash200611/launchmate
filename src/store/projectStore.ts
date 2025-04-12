@@ -52,7 +52,13 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       }
   
       const data = await res.json();
-      const mapped = data.map((p: any) => ({ ...p, id: p._id }));
+      const mapped = data.map((p: any) => ({
+        ...p,
+        id: p._id,
+        visibility: p.visibility || 'private',   // ✅ fallback
+        favorite: p.favorite || false,           // ✅ fallback
+        collaborators: p.collaborators || [],    // ✅ fallback
+      }));      
       set({ projects: mapped });
     } catch (error) {
       console.error('Error loading projects:', error);
