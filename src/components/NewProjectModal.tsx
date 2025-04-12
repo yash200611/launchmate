@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { X, Globe, Lock } from 'lucide-react';
 import { useThemeStore, getThemeClasses } from '../store/themeStore';
 import { useAuthStore } from '../store/authStore';
+import { useProjectStore } from '../store/projectStore';
+
 
 interface NewProjectModalProps {
   onClose: () => void;
@@ -34,11 +36,27 @@ export default function NewProjectModal({ onClose, onSubmit }: NewProjectModalPr
     newTag: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const loadProjects = useProjectStore(state => state.loadProjects);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { newTag, ...projectData } = formData;
-    onSubmit({ ...projectData, ownerEmail: user.email }); // 👈 ADD THIS
+  
+    const response = await fetch('/api/projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...projectData, ownerEmail: user.email }),
+    });
+  
+    if (response.ok) {
+      const newProject = await response.json();
+      await loadProjects(); // 🔥 Refetch the entire list from DB
+      onClose();            // Close the modal
+    } else {
+      alert('Failed to create project!');
+    }
   };
+  
   
 
   const addTag = () => {
