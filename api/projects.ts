@@ -1,5 +1,6 @@
+// NO 'exports', use default export ES-style
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import clientPromise from './connect';
+import clientPromise from './connect.js'; // 👈 must use .js if in ESM!
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const client = await clientPromise;
@@ -11,10 +12,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!ownerEmail) return res.status(400).json({ error: 'Missing ownerEmail in query' });
 
     const projects = await collection.find({ ownerEmail }).toArray();
-    res.status(200).json(projects);
-  } 
+    return res.status(200).json(projects);
+  }
 
-  else if (req.method === 'POST') {
+  if (req.method === 'POST') {
     const {
       title,
       description,
@@ -46,10 +47,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
 
     const result = await collection.insertOne(newProject);
-    res.status(201).json({ insertedId: result.insertedId, ...newProject });
-  } 
-  
-  else {
-    res.status(405).json({ error: 'Method not allowed' });
+    return res.status(201).json({ insertedId: result.insertedId, ...newProject });
   }
+
+  return res.status(405).json({ error: 'Method not allowed' });
 }
