@@ -62,6 +62,7 @@ function Dashboard() {
   const { theme, setTheme } = useThemeStore();
   const { unreadCount, notificationsEnabled, toggleNotifications } = useNotificationStore();
   const { projects, addProject, toggleFavorite, deleteProject, toggleVisibility } = useProjectStore();
+  const { loadProjects } = useProjectStore();
   const [currentView, setCurrentView] = useState<ProjectVisibility>('all');
   const [projectView, setProjectView] = useState<ProjectView>('all');
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
@@ -93,6 +94,11 @@ function Dashboard() {
     
     document.documentElement.className = `${themeColors[theme].bg} ${themeColors[theme].text}`;
   }, [theme]);
+
+  useEffect(() => {
+    loadProjects(); // Load from MongoDB based on logged-in user
+  }, []);
+  
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'contrast') => {
     setTheme(newTheme);

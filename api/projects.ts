@@ -7,12 +7,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const collection = db.collection('projects');
 
   if (req.method === 'GET') {
-    const projects = await collection.find({}).toArray();
-    res.status(200).json(projects);
-  } else if (req.method === 'POST') {
-    const { title, description, visibility, problem, targetAudience, stage, tags } = req.body;
+    const { ownerEmail } = req.query;
+    if (!ownerEmail) return res.status(400).json({ error: 'Missing ownerEmail in query' });
 
-    if (!title || !description) {
+    const projects = await collection.find({ ownerEmail }).toArray();
+    res.status(200).json(projects);
+  } 
+
+  else if (req.method === 'POST') {
+    const {
+      title,
+      description,
+      visibility,
+      problem,
+      targetAudience,
+      stage,
+      tags,
+      ownerEmail
+    } = req.body;
+
+    if (!title || !description || !ownerEmail) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -24,6 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       targetAudience,
       stage,
       tags,
+      ownerEmail,
       lastEdited: new Date().toISOString(),
       dateCreated: new Date().toISOString(),
       collaborators: [],
@@ -32,7 +47,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const result = await collection.insertOne(newProject);
     res.status(201).json({ insertedId: result.insertedId, ...newProject });
-  } else {
+  } 
+  
+  else {
     res.status(405).json({ error: 'Method not allowed' });
   }
 }

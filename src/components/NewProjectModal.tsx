@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { X, Globe, Lock } from 'lucide-react';
 import { useThemeStore, getThemeClasses } from '../store/themeStore';
+import { useAuthStore } from '../store/authStore';
+
+const { user } = useAuthStore();
 
 interface NewProjectModalProps {
   onClose: () => void;
@@ -12,8 +15,10 @@ interface NewProjectModalProps {
     targetAudience: string;
     stage: 'idea' | 'mvp' | 'fundraising' | 'launched';
     tags: string[];
+    ownerEmail: string;
   }) => void;
 }
+
 
 export default function NewProjectModal({ onClose, onSubmit }: NewProjectModalProps) {
   const { theme } = useThemeStore();
@@ -33,8 +38,9 @@ export default function NewProjectModal({ onClose, onSubmit }: NewProjectModalPr
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const { newTag, ...projectData } = formData;
-    onSubmit(projectData);
+    onSubmit({ ...projectData, ownerEmail: user.email }); // 👈 ADD THIS
   };
+  
 
   const addTag = () => {
     if (formData.newTag.trim() && !formData.tags.includes(formData.newTag.trim())) {
