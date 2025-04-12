@@ -1,5 +1,5 @@
-// FILE: api/projects.mjs
-import clientPromise from './connect.mjs';
+// FILE: api/projects.js
+import clientPromise from './connect.js';
 
 export default async function handler(req, res) {
   const client = await clientPromise;
