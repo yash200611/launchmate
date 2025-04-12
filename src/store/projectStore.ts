@@ -42,7 +42,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         return;
       }
       const data = await res.json();
-      set({ projects: data });
+      if (Array.isArray(data)) {
+        set({ projects: data });
+      } else {
+        console.error("Unexpected response format:", data);
+      }
+
 
     } catch (error) {
       console.error('Error loading projects:', error);
