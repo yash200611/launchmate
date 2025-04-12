@@ -1,8 +1,7 @@
-// NO 'exports', use default export ES-style
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import clientPromise from './connect.js'; // 👈 must use .js if in ESM!
+// FILE: api/projects.mjs
+import clientPromise from './connect.mjs';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   const client = await clientPromise;
   const db = client.db('launchmate');
   const collection = db.collection('projects');
