@@ -363,15 +363,7 @@ export default function ProjectDetails() {
   if (!project) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-4">Project not found</h2>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="text-indigo-600 hover:text-indigo-800"
-          >
-            Return to Dashboard
-          </button>
-        </div>
+        <p className="text-gray-500 text-lg">Loading project...</p>
       </div>
     );
   }
@@ -483,7 +475,7 @@ export default function ProjectDetails() {
                         <p className="text-sm text-gray-500">{milestone.description}</p>
                       </div>
                     </div>
-                    {expandedMilestone === milestone.title ? (
+                    {expandedMilestones[project.id] === milestone.title ? (
                       <ChevronUp className="h-5 w-5 text-gray-400" />
                     ) : (
                       <ChevronDown className="h-5 w-5 text-gray-400" />
