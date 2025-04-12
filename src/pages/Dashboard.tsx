@@ -61,8 +61,7 @@ function Dashboard() {
   const navigate = useNavigate();
   const { theme, setTheme } = useThemeStore();
   const { unreadCount, notificationsEnabled, toggleNotifications } = useNotificationStore();
-  const { projects, addProject, toggleFavorite, deleteProject, toggleVisibility } = useProjectStore();
-  const { loadProjects } = useProjectStore();
+  const { projects, loading, addProject, toggleFavorite, deleteProject, toggleVisibility, loadProjects } = useProjectStore();
   const [currentView, setCurrentView] = useState<ProjectVisibility>('all');
   const [projectView, setProjectView] = useState<ProjectView>('all');
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
@@ -96,81 +95,8 @@ function Dashboard() {
   }, [theme]);
 
   useEffect(() => {
-    loadProjects(); // Load from MongoDB based on logged-in user
+    loadProjects();
   }, []);
-  
-
-  const handleThemeChange = (newTheme: 'light' | 'dark' | 'contrast') => {
-    setTheme(newTheme);
-    setShowThemeDropdown(false);
-  };
-
-  const handleLogout = async () => {
-    navigate('/');
-  };
-
-  const handleProjectAction = (projectId: string, action: string) => {
-    setShowProjectMenu(null);
-    const project = projects.find(p => p.id === projectId);
-    if (!project) return;
-
-    switch (action) {
-      case 'rename':
-        // Implement rename logic
-        break;
-      case 'duplicate':
-        const newProject = {
-          ...project,
-          id: Math.random().toString(36).substr(2, 9),
-          title: `${project.title} (Copy)`,
-          dateCreated: new Date().toISOString(),
-          lastEdited: new Date().toISOString(),
-        };
-        addProject(newProject);
-        break;
-      case 'delete':
-        if (window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
-          deleteProject(projectId);
-        }
-        break;
-      case 'togglePrivacy':
-        toggleVisibility(projectId);
-        break;
-    }
-  };
-
-  const handleNewProject = (projectData: any) => {
-    addProject(projectData);
-    setShowNewProjectModal(false);
-  };
-
-  const filteredAndSortedProjects = projects
-    .filter(project => {
-      const matchesView = currentView === 'all' 
-        ? true 
-        : currentView === 'shared' 
-          ? project.collaborators.length > 0 
-          : project.visibility === 'private';
-      
-      const matchesFavorites = projectView === 'all' || (projectView === 'favorites' && project.favorite);
-      
-      const matchesSearch = searchTerm === '' || 
-        project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-
-      return matchesView && matchesFavorites && matchesSearch;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'alphabetical':
-          return a.title.localeCompare(b.title);
-        case 'dateCreated':
-          return new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime();
-        default:
-          return new Date(b.lastEdited).getTime() - new Date(a.lastEdited).getTime();
-      }
-    });
 
   const getThemeClasses = () => {
     switch (theme) {
@@ -216,7 +142,88 @@ function Dashboard() {
     }
   };
 
-  const themeClasses = getThemeClasses();
+  // Add loading state UI
+  if (loading) {
+    return (
+      <div className={`min-h-screen ${getThemeClasses().background} p-8`}>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  const handleThemeChange = (newTheme: 'light' | 'dark' | 'contrast') => {
+    setTheme(newTheme);
+    setShowThemeDropdown(false);
+  };
+
+  const handleLogout = async () => {
+    navigate('/');
+  };
+
+  const handleProjectAction = (projectId: string, action: string) => {
+    setShowProjectMenu(null);
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    switch (action) {
+      case 'rename':
+        // Implement rename logic
+        break;
+      case 'duplicate':
+        const newProject = {
+          ...project,
+          id: Math.random().toString(36).substr(2, 9),
+          title: `${project.title} (Copy)`,
+          dateCreated: new Date().toISOString(),
+          lastEdited: new Date().toISOString(),
+        };
+        addProject(newProject);
+        break;
+      case 'delete':
+        if (window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+          deleteProject(projectId);
+        }
+        break;
+      case 'togglePrivacy':
+        toggleVisibility(projectId);
+        break;
+    }
+  };
+
+  const handleNewProject = (projectData: any) => {
+    addProject(projectData);
+    setShowNewProjectModal(false);
+  };
+
+  const filteredAndSortedProjects = (projects || [])
+    .filter(project => {
+      const matchesView = currentView === 'all' 
+        ? true 
+        : currentView === 'shared' 
+          ? project.collaborators.length > 0 
+          : project.visibility === 'private';
+      
+      const matchesFavorites = projectView === 'all' || (projectView === 'favorites' && project.favorite);
+      
+      const matchesSearch = searchTerm === '' || 
+        project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      return matchesView && matchesFavorites && matchesSearch;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'alphabetical':
+          return a.title.localeCompare(b.title);
+        case 'dateCreated':
+          return new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime();
+        default:
+          return new Date(b.lastEdited).getTime() - new Date(a.lastEdited).getTime();
+      }
+    });
 
   // Separate projects by visibility
   const publicProjects = filteredAndSortedProjects.filter(project => project.visibility === 'public');
@@ -224,18 +231,18 @@ function Dashboard() {
 
   const ProjectGrid = ({ projects, title }: { projects: Project[], title: string }) => (
     <div className="mb-8">
-      <h2 className={`text-xl font-semibold ${themeClasses.text} mb-4`}>{title}</h2>
+      <h2 className={`text-xl font-semibold ${getThemeClasses().text} mb-4`}>{title}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {(projects || []).map((project) => (
           <div
             key={project.id}
-            className={`${themeClasses.card} rounded-lg shadow-sm p-4 border ${themeClasses.border} group cursor-pointer`}
+            className={`${getThemeClasses().card} rounded-lg shadow-sm p-4 border ${getThemeClasses().border} group cursor-pointer`}
             onClick={() => navigate(`/project/${project.id}`)}
           >
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
                 <div className="flex items-start gap-2">
-                  <h3 className={`text-lg font-semibold ${themeClasses.text}`}>
+                  <h3 className={`text-lg font-semibold ${getThemeClasses().text}`}>
                     {project.title}
                   </h3>
                   <button
@@ -268,14 +275,14 @@ function Dashboard() {
                 </button>
                 
                 {showProjectMenu === project.id && (
-                  <div className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg ${themeClasses.card} ring-1 ring-black ring-opacity-5 z-10`}>
+                  <div className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg ${getThemeClasses().card} ring-1 ring-black ring-opacity-5 z-10`}>
                     <div className="py-1">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleProjectAction(project.id, 'rename');
                         }}
-                        className={`flex items-center gap-2 px-4 py-2 text-sm ${themeClasses.text} ${themeClasses.hover} w-full`}
+                        className={`flex items-center gap-2 px-4 py-2 text-sm ${getThemeClasses().text} ${getThemeClasses().hover} w-full`}
                       >
                         <Pencil className="h-4 w-4" />
                         Rename
@@ -285,7 +292,7 @@ function Dashboard() {
                           e.stopPropagation();
                           handleProjectAction(project.id, 'togglePrivacy');
                         }}
-                        className={`flex items-center gap-2 px-4 py-2 text-sm ${themeClasses.text} ${themeClasses.hover} w-full`}
+                        className={`flex items-center gap-2 px-4 py-2 text-sm ${getThemeClasses().text} ${getThemeClasses().hover} w-full`}
                       >
                         {project.visibility === 'private' ? (
                           <>
@@ -304,7 +311,7 @@ function Dashboard() {
                           e.stopPropagation();
                           handleProjectAction(project.id, 'duplicate');
                         }}
-                        className={`flex items-center gap-2 px-4 py-2 text-sm ${themeClasses.text} ${themeClasses.hover} w-full`}
+                        className={`flex items-center gap-2 px-4 py-2 text-sm ${getThemeClasses().text} ${getThemeClasses().hover} w-full`}
                       >
                         <Copy className="h-4 w-4" />
                         Duplicate
@@ -325,14 +332,14 @@ function Dashboard() {
               </div>
             </div>
 
-            <p className={`${themeClasses.text} mb-4`}>{project.description}</p>
+            <p className={`${getThemeClasses().text} mb-4`}>{project.description}</p>
 
             {/* Tags */}
             <div className="flex flex-wrap gap-2 mb-4">
               {project.tags.map((tag, index) => (
                 <span
                   key={index}
-                  className={`px-2 py-1 rounded-full text-xs ${themeClasses.button}`}
+                  className={`px-2 py-1 rounded-full text-xs ${getThemeClasses().button}`}
                 >
                   {tag}
                 </span>
@@ -373,12 +380,12 @@ function Dashboard() {
   return (
     <div className="h-screen flex">
       {/* Sidebar - Fixed */}
-      <div className={`w-64 ${themeClasses.sidebar} border-r ${themeClasses.border} flex flex-col`}>
+      <div className={`w-64 ${getThemeClasses().sidebar} border-r ${getThemeClasses().border} flex flex-col`}>
         {/* Logo */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-2">
             <Rocket className="h-6 w-6 text-indigo-600" />
-            <span className={`text-xl font-semibold ${themeClasses.text}`}>LaunchMate</span>
+            <span className={`text-xl font-semibold ${getThemeClasses().text}`}>LaunchMate</span>
           </div>
         </div>
 
@@ -508,10 +515,10 @@ function Dashboard() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-screen">
         {/* Header - Fixed */}
-        <header className={`${themeClasses.card} border-b p-4 flex-shrink-0`}>
+        <header className={`${getThemeClasses().card} border-b p-4 flex-shrink-0`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <h1 className={`text-2xl font-semibold ${themeClasses.text}`}>
+              <h1 className={`text-2xl font-semibold ${getThemeClasses().text}`}>
                 {currentView === 'all' && 'Dashboard'}
                 {currentView === 'shared' && 'Shared Projects'}
                 {currentView === 'private' && 'Private Projects'}
@@ -524,7 +531,7 @@ function Dashboard() {
                     onClick={() => setShowNotifications(!showNotifications)}
                     className="relative"
                   >
-                    <Bell className={`h-6 w-6 ${themeClasses.text}`} />
+                    <Bell className={`h-6 w-6 ${getThemeClasses().text}`} />
                     {unreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                         {unreadCount}
@@ -553,18 +560,18 @@ function Dashboard() {
                   placeholder="Search projects..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-2 rounded-lg ${themeClasses.button} ${themeClasses.text} border ${themeClasses.border} focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+                  className={`w-full pl-10 pr-4 py-2 rounded-lg ${getThemeClasses().button} ${getThemeClasses().text} border ${getThemeClasses().border} focus:outline-none focus:ring-2 focus:ring-indigo-500`}
                 />
               </div>
 
               {/* View Toggle */}
-              <div className="flex rounded-lg border ${themeClasses.border} overflow-hidden">
+              <div className="flex rounded-lg border ${getThemeClasses().border} overflow-hidden">
                 <button
                   onClick={() => setProjectView('all')}
                   className={`px-4 py-2 ${
                     projectView === 'all'
                       ? 'bg-indigo-500 text-white'
-                      : `${themeClasses.button} ${themeClasses.text}`
+                      : `${getThemeClasses().button} ${getThemeClasses().text}`
                   }`}
                 >
                   All
@@ -574,7 +581,7 @@ function Dashboard() {
                   className={`px-4 py-2 ${
                     projectView === 'favorites'
                       ? 'bg-indigo-500 text-white'
-                      : `${themeClasses.button} ${themeClasses.text}`
+                      : `${getThemeClasses().button} ${getThemeClasses().text}`
                   }`}
                 >
                   Favorites
@@ -585,7 +592,7 @@ function Dashboard() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as ProjectSort)}
-                className={`px-4 py-2 rounded-lg ${themeClasses.button} ${themeClasses.text} border ${themeClasses.border}`}
+                className={`px-4 py-2 rounded-lg ${getThemeClasses().button} ${getThemeClasses().text} border ${getThemeClasses().border}`}
               >
                 <option value="lastEdited">Last Edited</option>
                 <option value="alphabetical">Alphabetical</option>
@@ -605,14 +612,14 @@ function Dashboard() {
         </header>
 
         {/* Project Grid - Scrollable */}
-        <div className={`flex-1 overflow-y-auto ${themeClasses.background}`}>
+        <div className={`flex-1 overflow-y-auto ${getThemeClasses().background}`}>
           <div className="p-6">
             {filteredAndSortedProjects.length === 0 ? (
               <div className="text-center py-12">
                 <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                   <Folder className="h-12 w-12 text-gray-400" />
                 </div>
-                <h3 className={`text-xl font-medium ${themeClasses.text} mb-2`}>
+                <h3 className={`text-xl font-medium ${getThemeClasses().text} mb-2`}>
                   No projects yet
                 </h3>
                 <p className="text-gray-500 mb-4">

@@ -18,6 +18,7 @@ export interface Project {
 
 interface ProjectState {
   projects: Project[];
+  loading: boolean;
   loadProjects: () => Promise<void>;
   addProject: (project: Project) => void;
   updateProject: (id: string, project: Partial<Project>) => void;
@@ -28,11 +29,13 @@ interface ProjectState {
 
 export const useProjectStore = create<ProjectState>((set, get) => ({
   projects: [],
+  loading: false,
 
   loadProjects: async () => {
     const { user } = useAuthStore.getState();
     if (!user?.email) return;
 
+    set({ loading: true });
     try {
       const res = await fetch(`/api/projects?ownerEmail=${user.email}`);
 
@@ -43,14 +46,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       }
       const data = await res.json();
       if (Array.isArray(data)) {
-        set({ projects: data });
+        set({ projects: data, loading: false });
       } else {
         console.error("Unexpected response format:", data);
+        set({ loading: false });
       }
-
-
     } catch (error) {
       console.error('Error loading projects:', error);
+      set({ loading: false });
     }
   },
 
