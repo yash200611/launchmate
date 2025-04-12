@@ -54,11 +54,30 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
   
 
-  addProject: (project: Project) => {
-    set((state) => ({
-      projects: [project, ...state.projects],
-    }));
+  addProject: async (project: Project) => {
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(project),
+      });
+  
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Failed to save project:", text);
+        return;
+      }
+  
+      const savedProject = await res.json();
+  
+      set((state) => ({
+        projects: [savedProject, ...state.projects],
+      }));
+    } catch (error) {
+      console.error("Error adding project:", error);
+    }
   },
+  
 
   updateProject: (id, projectData) =>
     set((state) => ({
