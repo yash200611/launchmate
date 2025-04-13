@@ -20,7 +20,7 @@ interface ProjectState {
   projects: Project[];
   loading: boolean;
   loadProjects: () => Promise<void>;
-  addProject: (project: Project) => void;
+  addProject: (project: Omit<Project, 'id'>) => Promise<Project | null>;
   updateProject: (id: string, project: Partial<Project>) => void;
   deleteProject: (id: string) => void;
   toggleFavorite: (id: string) => void;
@@ -33,31 +33,77 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   loadProjects: async () => {
     const { user } = useAuthStore.getState();
-    if (!user?.email) return;
   
-    set({ loading: true }); // ✅ Start loading
+    console.log('Loading projects for user:', user); // ✅ log inside the store
+  
+    if (!user?.email || typeof user.email !== 'string') {
+      console.warn('Missing or invalid user email in loadProjects');
+      return;
+    }
+  
+    set({ loading: true });
   
     try {
-      const res = await fetch(`/api/projects?ownerEmail=${user.email}`);
+      const res = await fetch(`/api/projects?email=${user.email}`);
       if (!res.ok) {
         const text = await res.text();
         console.error("Failed to load projects:", text);
         return;
       }
+  
       const data = await res.json();
-      set({ projects: data });
+      const mapped = data.map((p: any) => ({
+        ...p,
+        id: p._id,
+        visibility: p.visibility || 'private',   // ✅ fallback
+        favorite: p.favorite || false,           // ✅ fallback
+        collaborators: p.collaborators || [],    // ✅ fallback
+      }));      
+      set({ projects: mapped });
     } catch (error) {
       console.error('Error loading projects:', error);
     } finally {
-      set({ loading: false }); // ✅ End loading
+      set({ loading: false });
     }
   },
-  
 
-  addProject: (project: Project) => {
-    set((state) => ({
-      projects: [project, ...state.projects],
-    }));
+  addProject: async (projectWithoutId) => {
+    try {
+      const res = await fetch('/api/projects.mjs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(projectWithoutId),
+      });
+
+      const text = await res.text();
+      let savedProject;
+
+      try {
+        savedProject = JSON.parse(text);
+      } catch (err) {
+        console.error("Failed to parse response:", text);
+        return null;
+      }
+
+      if (!res.ok) {
+        console.error("Project create error:", savedProject.error || text);
+        return null;
+      }
+
+      const fullProject: Project = {
+        ...savedProject,
+        id: savedProject.insertedId || savedProject.id || savedProject._id,
+      };
+
+      set((state) => ({
+        projects: [fullProject, ...state.projects],
+      }));
+
+      return fullProject;
+    } catch (error) {
+      console.error("Error adding project:", error);
+      return null;
+    }
   },
 
   updateProject: (id, projectData) =>

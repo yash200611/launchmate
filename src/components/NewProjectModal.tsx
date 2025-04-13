@@ -3,7 +3,7 @@ import { X, Globe, Lock } from 'lucide-react';
 import { useThemeStore, getThemeClasses } from '../store/themeStore';
 import { useAuthStore } from '../store/authStore';
 import { useProjectStore } from '../store/projectStore';
-
+import { useNavigate } from 'react-router-dom';
 
 interface NewProjectModalProps {
   onClose: () => void;
@@ -22,8 +22,9 @@ interface NewProjectModalProps {
 export default function NewProjectModal({ onClose, onSubmit }: NewProjectModalProps) {
   const { theme } = useThemeStore();
   const { user } = useAuthStore(); // ✅ MOVED HERE
+  const navigate = useNavigate();
   const themeClasses = getThemeClasses(theme);
-
+  const addProject = useProjectStore(state => state.addProject);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -42,23 +43,31 @@ export default function NewProjectModal({ onClose, onSubmit }: NewProjectModalPr
     e.preventDefault();
     const { newTag, ...projectData } = formData;
   
-    const response = await fetch('/api/projects', {
+    if (!user?.email) {
+      alert('User not found. Please log in again.');
+      return;
+    }
+    
+    const res = await fetch('/api/projects.mjs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...projectData, ownerEmail: user.email }),
+      body: JSON.stringify({
+        ...projectData,
+        ownerEmail: user.email
+      })
     });
-  
-    if (response.ok) {
-      const newProject = await response.json();
-      await loadProjects(); // 🔥 Refetch the entire list from DB
-      onClose();            // Close the modal
+    
+    const data = await res.json();
+    const newProjectId = data.id || data.insertedId || data._id;
+
+    if (res.ok && newProjectId) {
+      await loadProjects();
+      onClose();
     } else {
-      alert('Failed to create project!');
+      alert(data.error || 'Failed to create project!');
     }
   };
   
-  
-
   const addTag = () => {
     if (formData.newTag.trim() && !formData.tags.includes(formData.newTag.trim())) {
       setFormData({

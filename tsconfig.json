@@ -11,7 +11,9 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "incremental": true
+    "incremental": true,
+    "jsx": "react-jsx",                    // ✅ Add this
+    "allowImportingTsExtensions": true    // ✅ Add this
   },
   "include": ["src", "api"]
 }

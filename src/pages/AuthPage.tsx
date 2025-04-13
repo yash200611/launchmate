@@ -36,10 +36,13 @@ function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const { signIn, signUp } = useAuthStore();
+  const { signIn, signUp, user, loading, error } = useAuthStore();
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (user) navigate('/dashboard');
+  }, [user]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -49,30 +52,21 @@ function AuthPage() {
         setIsAnimating(false);
       }, 500);
     }, 5000);
-
     return () => clearInterval(interval);
   }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    
-    try {
-      if (isSignUp) {
-        await signUp(email, password);
-      } else {
-        await signIn(email, password);
-      }
-      navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.message);
+    if (isSignUp) {
+      await signUp(email, password);
+    } else {
+      await signIn(email, password);
     }
   };
 
   const handleShowForm = (signup: boolean) => {
     setIsSignUp(signup);
     setShowForm(true);
-    setError('');
     setEmail('');
     setPassword('');
   };
@@ -95,18 +89,15 @@ function AuthPage() {
 
   return (
     <div className="min-h-screen bg-[#0A0B1E] flex relative overflow-hidden">
-      {/* Left Section - Hidden on mobile */}
+      {/* Left Section - Testimonials */}
       <div className="hidden lg:flex lg:w-1/2 relative">
-        {/* Gradient Orbs */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
           <div className="absolute top-1/3 -right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
           <div className="absolute -bottom-1/4 left-1/3 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
         </div>
 
-        {/* Content */}
         <div className="relative z-10 flex flex-col justify-between w-full p-12">
-          {/* Logo & Heading */}
           <div>
             <div className="flex items-center gap-4 mb-8">
               <div className="relative">
@@ -125,10 +116,9 @@ function AuthPage() {
             </p>
           </div>
 
-          {/* Testimonials */}
           <div className="bg-white bg-opacity-5 backdrop-blur-xl rounded-2xl p-8 relative">
             <Quote className="text-purple-400 h-8 w-8 mb-6 opacity-50" />
-            
+
             <div className="relative h-48">
               <div className={`absolute w-full transition-all duration-500 ${isAnimating ? 'slide-out' : 'slide-in'}`}>
                 <div className="flex items-start gap-4">
@@ -182,9 +172,8 @@ function AuthPage() {
         </div>
       </div>
 
-      {/* Right Section */}
+      {/* Right Section - Auth */}
       <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
-        {/* Mobile Logo */}
         <div className="lg:hidden flex items-center gap-4 mb-12">
           <Rocket className="h-10 w-10 text-cyan-400" />
           <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-purple-500 to-indigo-400 text-transparent bg-clip-text">
@@ -205,14 +194,14 @@ function AuthPage() {
                 <X className="h-6 w-6" />
               </button>
             </div>
-            
+
             <form onSubmit={handleAuth} className="space-y-6">
               {error && (
                 <div className="p-4 bg-red-500 bg-opacity-10 border border-red-500 rounded-xl text-red-500 text-sm">
                   {error}
                 </div>
               )}
-              
+
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                   Email
@@ -227,7 +216,7 @@ function AuthPage() {
                   required
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
                   Password
@@ -243,10 +232,7 @@ function AuthPage() {
                 />
               </div>
 
-              <button
-                type="submit"
-                className="relative w-full group"
-              >
+              <button type="submit" className="relative w-full group">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-400 via-purple-500 to-indigo-400 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-200"></div>
                 <div className="relative px-6 py-3 bg-[#0A0B1E] rounded-xl leading-none flex items-center justify-center">
                   <span className="text-gray-100 group-hover:text-white transition duration-200">

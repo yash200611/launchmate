@@ -1,48 +1,65 @@
+// FILE: src/store/authStore.ts
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-
-interface User {
-  id: string;
-  email: string;
-}
 
 interface AuthState {
-  user: User | null;
+  user: { email: string; userId: string } | null;
   loading: boolean;
+  error: string;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => void;
 }
 
-// Simulated user database
-const users: { [email: string]: { password: string; id: string } } = {};
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  loading: false,
+  error: '',
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      loading: false,
-      signIn: async (email, password) => {
-        const user = users[email];
-        if (!user || user.password !== password) {
-          throw new Error('Invalid email or password');
-        }
-        set({ user: { id: user.id, email } });
-      },
-      signUp: async (email, password) => {
-        if (users[email]) {
-          throw new Error('Email already exists');
-        }
-        const id = Math.random().toString(36).substring(2);
-        users[email] = { password, id };
-        set({ user: { id, email } });
-      },
-      signOut: () => {
-        set({ user: null });
-      },
-    }),
-    {
-      name: 'auth-storage',
+  signIn: async (email, password) => {
+    set({ loading: true, error: '' });
+    try {
+      const res = await fetch('/api/auth.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'signin', email, password })
+      });
+
+      const text = await res.text();
+      try {
+        const data = JSON.parse(text);
+        if (!res.ok) throw new Error(data.error || 'Failed to sign in');
+        set({ user: data, loading: false });
+      } catch (jsonErr) {
+        set({ error: 'Invalid server response: ' + text, loading: false });
+      }
+
+    } catch (err: any) {
+      set({ error: err.message, loading: false });
     }
-  )
-);
+  },
+
+  signUp: async (email, password) => {
+    set({ loading: true, error: '' });
+    try {
+      const res = await fetch('/api/auth.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'signup', email, password })
+      });
+
+      const text = await res.text();
+      try {
+        const data = JSON.parse(text);
+        if (!res.ok) throw new Error(data.error || 'Failed to sign up');
+        set({ user: data, loading: false });
+      } catch (jsonErr) {
+        set({ error: 'Invalid server response: ' + text, loading: false });
+      }
+
+    } catch (err: any) {
+      set({ error: err.message, loading: false });
+    }
+  },
+
+  signOut: () => set({ user: null })
+}));
