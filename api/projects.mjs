@@ -1,5 +1,6 @@
 // FILE: api/projects.mjs
 import clientPromise from './connect.mjs';
+import { ObjectId } from 'mongodb';
 
 export default async function handler(req, res) {
   const client = await clientPromise;
@@ -35,6 +36,23 @@ export default async function handler(req, res) {
       const result = await projects.insertOne(newProject);
       return res.status(201).json({ ...newProject, id: result.insertedId });
     }
+
+    if (req.method === 'PATCH') {
+      const { id, visibility, collaborators } = req.body;
+      if (!id) return res.status(400).json({ error: 'Missing project ID' });
+    
+      const update = {};
+      if (visibility) update.visibility = visibility;
+      if (collaborators) update.collaborators = collaborators;
+    
+      const result = await projects.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: update }
+      );
+    
+      return res.status(200).json({ success: true });
+    }
+    
 
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (err) {

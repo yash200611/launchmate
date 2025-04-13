@@ -8,35 +8,9 @@ import NotificationsPanel from '../components/NotificationsPanel';
 import NewProjectModal from '../components/NewProjectModal';
 import AIChatbot from '../components/AIChatbot';
 import {
-  Rocket,
-  Layout,
-  Settings,
-  Users,
-  Lock,
-  Info,
-  HelpCircle,
-  LogOut,
-  Bell,
-  BellOff,
-  Search,
-  Plus,
-  MoreVertical,
-  Sun,
-  Moon,
-  Contrast,
-  Share2,
-  Folder,
-  FolderLock,
-  ChevronDown,
-  Star,
-  StarOff,
-  Globe,
-  Archive,
-  Trash2,
-  Copy,
-  Pencil,
-  Filter,
-  SortAsc
+  Rocket, Layout, Settings, Users, Lock, Info, HelpCircle, LogOut, Bell, BellOff,
+  Search, Plus, MoreVertical, Sun, Moon, Contrast, Share2, Folder, FolderLock,
+  ChevronDown, Star, StarOff, Globe, Archive, Trash2, Copy, Pencil
 } from 'lucide-react';
 
 type ProjectVisibility = 'all' | 'shared' | 'private';
@@ -167,7 +141,7 @@ function Dashboard() {
     navigate('/');
   };
 
-  const handleProjectAction = (projectId: string, action: string) => {
+  const handleProjectAction = async (projectId: string, action: string) => {
     setShowProjectMenu(null);
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
@@ -176,7 +150,7 @@ function Dashboard() {
       case 'rename':
         // Implement rename logic
         break;
-      case 'duplicate':
+      case 'duplicate': {
         const newProject = {
           ...project,
           id: Math.random().toString(36).substr(2, 9),
@@ -186,14 +160,41 @@ function Dashboard() {
         };
         addProject(newProject);
         break;
-      case 'delete':
+      }
+      case 'delete': {
         if (window.confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
           deleteProject(projectId);
         }
         break;
-      case 'togglePrivacy':
-        toggleVisibility(projectId);
+      }
+      case 'togglePrivacy': {
+        if (project.visibility === 'private') {
+          const email = prompt('Enter an email to share this project with:');
+          if (!email) return;
+
+          await fetch('/api/projects.mjs', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: projectId,
+              visibility: 'public',
+              collaborators: [...(project.collaborators || []), email]
+            })
+          });
+        } else {
+          await fetch('/api/projects.mjs', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: projectId,
+              visibility: 'private'
+            })
+          });
+        }
+
+        await loadProjects();
         break;
+      }
     }
   };
 
